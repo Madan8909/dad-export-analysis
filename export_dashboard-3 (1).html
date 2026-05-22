@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Global Export Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#04080f;--surface:#0d1520;--surface2:#121d2e;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
+  --text:#e8edf5;--muted:#6a7d97;
+  --accent:#1a9e75;--accent2:#0f6e56;--accent-glow:rgba(26,158,117,0.15);
+  --amber:#ef9f27;--coral:#d85a30;--blue:#378add;--purple:#7f77dd;
+  --font-head:'Syne',sans-serif;--font-mono:'DM Mono',monospace;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--font-mono);font-size:13px;line-height:1.6;min-height:100vh}
+
+.topbar{position:sticky;top:0;z-index:100;background:rgba(4,8,15,0.92);backdrop-filter:blur(12px);border-bottom:0.5px solid var(--border2);padding:0 2rem;height:56px;display:flex;align-items:center;justify-content:space-between}
+.logo{font-family:var(--font-head);font-weight:800;font-size:15px;letter-spacing:0.04em;color:var(--text);text-transform:uppercase}
+.logo span{color:var(--accent)}
+.nav-pills{display:flex;gap:4px}
+.nav-pill{padding:5px 14px;border-radius:4px;font-family:var(--font-mono);font-size:11px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;border:0.5px solid transparent;color:var(--muted);background:transparent;transition:all 0.15s}
+.nav-pill:hover{color:var(--text);border-color:var(--border2)}
+.nav-pill.active{color:var(--accent);border-color:var(--accent2);background:var(--accent-glow)}
+
+.hero{padding:5rem 2rem 4rem;max-width:1200px;margin:0 auto}
+.hero-tag{font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:var(--accent);border:0.5px solid var(--accent2);background:var(--accent-glow);display:inline-block;padding:3px 10px;border-radius:2px;margin-bottom:1.5rem}
+.hero h1{font-family:var(--font-head);font-size:clamp(2.4rem,5vw,4rem);font-weight:800;line-height:1.05;letter-spacing:-0.02em;margin-bottom:1.2rem}
+.hero h1 em{font-style:normal;color:var(--accent)}
+.hero-sub{font-size:14px;color:var(--muted);max-width:500px;line-height:1.7;margin-bottom:2.5rem}
+.hero-actions{display:flex;gap:12px;flex-wrap:wrap}
+.btn-primary{padding:10px 22px;background:var(--accent);color:#fff;border:none;border-radius:4px;font-family:var(--font-mono);font-size:12px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;transition:all 0.15s}
+.btn-primary:hover{background:#21b585}
+.btn-ghost{padding:10px 22px;background:transparent;color:var(--muted);border:0.5px solid var(--border2);border-radius:4px;font-family:var(--font-mono);font-size:12px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;transition:all 0.15s}
+.btn-ghost:hover{color:var(--text);border-color:rgba(255,255,255,0.25)}
+
+section{max-width:1200px;margin:0 auto;padding:3rem 2rem;border-top:0.5px solid var(--border);display:none}
+section.visible{display:block}
+.section-label{font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);margin-bottom:0.5rem}
+.section-title{font-family:var(--font-head);font-size:1.6rem;font-weight:700;margin-bottom:2rem;letter-spacing:-0.01em}
+
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:2.5rem}
+.stat-card{background:var(--surface);border:0.5px solid var(--border);border-radius:6px;padding:1.25rem 1.25rem 1rem;position:relative;overflow:hidden;transition:border-color 0.2s}
+.stat-card:hover{border-color:var(--border2)}
+.stat-card::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent);opacity:0;transition:opacity 0.2s}
+.stat-card:hover::after{opacity:1}
+.stat-label{font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:0.5rem}
+.stat-value{font-family:var(--font-head);font-size:1.9rem;font-weight:700;color:var(--text);line-height:1}
+.stat-sub{font-size:11px;color:var(--muted);margin-top:6px}
+.stat-badge{font-size:10px;padding:2px 7px;border-radius:2px;font-weight:500;letter-spacing:0.04em}
+.badge-green{background:rgba(26,158,117,0.15);color:var(--accent);border:0.5px solid var(--accent2)}
+.badge-amber{background:rgba(239,159,39,0.12);color:var(--amber);border:0.5px solid rgba(239,159,39,0.3)}
+.badge-red{background:rgba(216,90,48,0.12);color:var(--coral);border:0.5px solid rgba(216,90,48,0.3)}
+
+.chart-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(480px,1fr));gap:16px;margin-bottom:1.5rem}
+.chart-grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:1.5rem}
+.chart-card{background:var(--surface);border:0.5px solid var(--border);border-radius:6px;padding:1.25rem}
+.chart-card.full{grid-column:1/-1}
+.chart-header{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:1.1rem}
+.chart-title{font-family:var(--font-head);font-size:14px;font-weight:700;color:var(--text)}
+.chart-meta{font-size:10px;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase}
+.chart-wrap{position:relative;width:100%}
+
+.lb-table{width:100%;border-collapse:collapse}
+.lb-table thead th{font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);padding:0 12px 10px;text-align:left;border-bottom:0.5px solid var(--border2);font-weight:400}
+.lb-table thead th:last-child{text-align:right}
+.lb-table tbody tr{border-bottom:0.5px solid var(--border);transition:background 0.12s;cursor:pointer}
+.lb-table tbody tr:hover{background:var(--surface2)}
+.lb-table tbody td{padding:10px 12px;vertical-align:middle;font-size:13px}
+.lb-table tbody td:last-child{text-align:right}
+.rank-num{font-family:var(--font-head);font-size:16px;font-weight:800;color:var(--muted);min-width:26px;display:inline-block}
+.rank-1{color:var(--amber)}.rank-2{color:#aaa}.rank-3{color:#cd7f32}
+.country-name{font-family:var(--font-head);font-size:13px;font-weight:700;color:var(--text)}
+.growth-pos{color:var(--accent)}.growth-neg{color:var(--coral)}
+.bar-bg{height:3px;background:var(--surface2);border-radius:2px;margin-top:4px;overflow:hidden}
+.bar-fill{height:100%;background:var(--accent);border-radius:2px}
+.risk-dot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:5px}
+.risk-low{background:var(--accent)}.risk-medium{background:var(--amber)}.risk-high{background:var(--coral)}
+
+.search-box{display:flex;gap:8px;margin-bottom:1.2rem;max-width:560px}
+.search-input{flex:1;background:var(--surface);border:0.5px solid var(--border2);border-radius:4px;color:var(--text);font-family:var(--font-mono);font-size:13px;padding:10px 14px;outline:none;transition:border-color 0.15s}
+.search-input:focus{border-color:var(--accent)}
+.search-input::placeholder{color:var(--muted)}
+.suggestions{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:2rem}
+.sug-btn{padding:4px 10px;border:0.5px solid var(--border2);border-radius:3px;background:transparent;color:var(--muted);font-family:var(--font-mono);font-size:11px;cursor:pointer;transition:all 0.12s}
+.sug-btn:hover{color:var(--text);border-color:rgba(255,255,255,0.3)}
+
+.country-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:12px}
+.country-hero-name{font-family:var(--font-head);font-size:2.2rem;font-weight:800;line-height:1}
+.country-rank-sub{font-size:12px;color:var(--muted);margin-top:4px}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:1.8rem}
+.kpi{background:var(--surface);border:0.5px solid var(--border);border-radius:6px;padding:1rem}
+.kpi-label{font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.kpi-value{font-family:var(--font-head);font-size:1.4rem;font-weight:700}
+.search-chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:1.4rem}
+.search-chart-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:1.4rem}
+.search-chart-card{background:var(--surface);border:0.5px solid var(--border);border-radius:6px;padding:1.25rem}
+.no-result{text-align:center;padding:3rem;color:var(--muted);font-size:14px}
+
+.legend{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:10px;font-size:11px;color:var(--muted)}
+.legend-item{display:flex;align-items:center;gap:5px}
+.legend-swatch{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+
+footer{border-top:0.5px solid var(--border);text-align:center;padding:2rem;color:var(--muted);font-size:11px;letter-spacing:0.04em}
+
+@media(max-width:780px){
+  .chart-grid,.chart-grid-3,.search-chart-grid,.search-chart-grid-3{grid-template-columns:1fr}
+  .hero h1{font-size:2rem}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">Export<span>Intel</span></div>
+  <nav class="nav-pills">
+    <button class="nav-pill active" onclick="showSection('overview')">Overview</button>
+    <button class="nav-pill" onclick="showSection('leaderboard')">Leaderboard</button>
+    <button class="nav-pill" onclick="showSection('search')">Search</button>
+    <button class="nav-pill" onclick="showSection('about')">About</button>
+  </nav>
+</div>
+
+<div class="hero" id="hero-block">
+  <div class="hero-tag">Global Export Intelligence</div>
+  <h1>Track the world's<br><em>trade flows</em></h1>
+  <p class="hero-sub">Analyze export volumes, trade partnerships, growth trajectories, and risk profiles across 25 major economies.</p>
+  <div class="hero-actions">
+    <button class="btn-primary" onclick="showSection('leaderboard')">View Leaderboard</button>
+    <button class="btn-ghost" onclick="showSection('search')">Search a Country</button>
+  </div>
+</div>
+
+<!-- OVERVIEW -->
+<section id="section-overview" class="visible">
+  <div class="section-label">Dashboard</div>
+  <div class="section-title">Global snapshot</div>
+  <div class="stat-grid" id="overview-stats"></div>
+
+  <div class="chart-grid">
+    <div class="chart-card full">
+      <div class="chart-header"><div class="chart-title">Export volume — all 25 economies</div><div class="chart-meta">USD billions · colored by risk</div></div>
+      <div class="legend">
+        <span class="legend-item"><span class="legend-swatch" style="background:#1a9e75"></span>Low risk</span>
+        <span class="legend-item"><span class="legend-swatch" style="background:#ef9f27"></span>Medium risk</span>
+        <span class="legend-item"><span class="legend-swatch" style="background:#d85a30"></span>High risk</span>
+      </div>
+      <div class="chart-wrap" style="height:480px"><canvas id="chart-volume" role="img" aria-label="Horizontal bar chart of export volumes for all 25 countries">Export volumes</canvas></div>
+    </div>
+  </div>
+
+  <div class="chart-grid">
+    <div class="chart-card">
+      <div class="chart-header"><div class="chart-title">Year-over-year growth rates</div><div class="chart-meta">% — all countries</div></div>
+      <div class="chart-wrap" style="height:340px"><canvas id="chart-growth" role="img" aria-label="Bar chart of YoY growth rates">Growth rates</canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-header"><div class="chart-title">Risk vs growth matrix</div><div class="chart-meta">Bubble = export size</div></div>
+      <div class="chart-wrap" style="height:340px"><canvas id="chart-scatter" role="img" aria-label="Bubble chart risk vs growth">Risk vs growth</canvas></div>
+    </div>
+  </div>
+
+  <div class="chart-grid-3">
+    <div class="chart-card">
+      <div class="chart-header"><div class="chart-title">Export category mix</div><div class="chart-meta">Weighted by volume</div></div>
+      <div class="legend" id="cat-legend"></div>
+      <div class="chart-wrap" style="height:230px"><canvas id="chart-category" role="img" aria-label="Donut chart of export categories">Categories</canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-header"><div class="chart-title">Risk tier distribution</div><div class="chart-meta">By country count</div></div>
+      <div class="chart-wrap" style="height:230px"><canvas id="chart-risk-pie" role="img" aria-label="Pie chart of risk tier distribution">Risk tiers</canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-header"><div class="chart-title">Trade balance overview</div><div class="chart-meta">Export surplus/deficit $B</div></div>
+      <div class="chart-wrap" style="height:230px"><canvas id="chart-balance-overview" role="img" aria-label="Bar chart of trade balances">Trade balance</canvas></div>
+    </div>
+  </div>
+
+  <div class="chart-grid">
+    <div class="chart-card">
+      <div class="chart-header"><div class="chart-title">Top 10 exporters — 5-year trend</div><div class="chart-meta">USD billions</div></div>
+      <div class="legend" id="trend-legend"></div>
+      <div class="chart-wrap" style="height:300px"><canvas id="chart-trend-top10" role="img" aria-label="Line chart of top 10 exporters over 5 years">Top 10 trend</canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-header"><div class="chart-title">Growth vs volume quadrant</div><div class="chart-meta">Stars = top performers</div></div>
+      <div class="chart-wrap" style="height:300px"><canvas id="chart-quadrant" role="img" aria-label="Scatter chart growth vs volume quadrant">Growth quadrant</canvas></div>
+    </div>
+  </div>
+</section>
+
+<!-- LEADERBOARD -->
+<section id="section-leaderboard">
+  <div class="section-label">Rankings</div>
+  <div class="section-title">Export leaderboard — 25 economies</div>
+  <div style="background:var(--surface);border:0.5px solid var(--border);border-radius:6px;overflow:auto">
+    <table class="lb-table">
+      <thead><tr>
+        <th style="width:44px">#</th><th>Country</th><th>Region</th><th>Category</th><th>Partner</th><th>Growth</th><th>Risk</th><th>Balance</th><th>Volume</th>
+      </tr></thead>
+      <tbody id="leaderboard-body"></tbody>
+    </table>
+  </div>
+</section>
+
+<!-- SEARCH -->
+<section id="section-search">
+  <div class="section-label">Country Deep-Dive</div>
+  <div class="section-title">Search export data</div>
+  <div class="search-box">
+    <input class="search-input" type="text" id="search-input" placeholder="e.g. India, Vietnam, UAE…" oninput="handleSearch(this.value)">
+    <button class="btn-primary" onclick="handleSearch(document.getElementById('search-input').value)">Analyze</button>
+  </div>
+  <div class="suggestions" id="suggestions"></div>
+  <div id="search-result"></div>
+</section>
+
+<!-- ABOUT -->
+<section id="section-about">
+  <div class="section-label">Information</div>
+  <div class="section-title">About this dashboard</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:860px">
+    <div style="background:var(--surface);border:0.5px solid var(--border);border-radius:6px;padding:1.25rem">
+      <div class="stat-label" style="margin-bottom:10px">What we track</div>
+      <ul style="list-style:none;display:flex;flex-direction:column;gap:9px">
+        <li style="display:flex;align-items:center;gap:8px;font-size:13px"><span style="color:var(--accent)">▸</span>Export volume & 5-year historical trends</li>
+        <li style="display:flex;align-items:center;gap:8px;font-size:13px"><span style="color:var(--accent)">▸</span>Trade balance (exports vs imports)</li>
+        <li style="display:flex;align-items:center;gap:8px;font-size:13px"><span style="color:var(--accent)">▸</span>Partner country breakdown</li>
+        <li style="display:flex;align-items:center;gap:8px;font-size:13px"><span style="color:var(--accent)">▸</span>Growth vs global peers comparison</li>
+        <li style="display:flex;align-items:center;gap:8px;font-size:13px"><span style="color:var(--accent)">▸</span>Risk classification & dependency analysis</li>
+        <li style="display:flex;align-items:center;gap:8px;font-size:13px"><span style="color:var(--accent)">▸</span>Category mix & regional context</li>
+        <li style="display:flex;align-items:center;gap:8px;font-size:13px"><span style="color:var(--accent)">▸</span>GDP export intensity ratio</li>
+      </ul>
+    </div>
+    <div style="background:var(--surface);border:0.5px solid var(--border);border-radius:6px;padding:1.25rem">
+      <div class="stat-label" style="margin-bottom:10px">25 covered economies</div>
+      <p style="font-size:12px;color:var(--muted);line-height:2.1">China · USA · Germany · Netherlands · Japan · S. Korea · France · Canada · Italy · Belgium · Mexico · India · Russia · Australia · Spain · Switzerland · UAE · Vietnam · Taiwan · Brazil · Poland · Turkey · Saudi Arabia · South Africa · Argentina</p>
+    </div>
+  </div>
+</section>
+
+<footer>ExportIntel — Global Export Analytics &nbsp;·&nbsp; 25 economies · 9 categories · 5-year trends</footer>
+
+<script>
+const EXPORT_DATA = [
+  { country:"China",        region:"Asia",         value:3380, category:"Electronics",  partner:"USA",        growth:6.8,  risk:"Low",    gdpShare:19,
+    exports:[2800,2950,3100,3200,3380], imports:[2100,2200,2300,2380,2450],
+    partners:{USA:22,EU:18,ASEAN:15,Japan:8,Other:37}, catBreak:{Electronics:45,Machinery:20,Textiles:12,Chemicals:10,Other:13} },
+  { country:"USA",          region:"N. America",   value:2060, category:"Machinery",    partner:"Canada",     growth:3.4,  risk:"Low",    gdpShare:9,
+    exports:[1700,1780,1850,1960,2060], imports:[2400,2500,2580,2680,2760],
+    partners:{Canada:18,Mexico:15,China:9,Japan:5,Other:53}, catBreak:{Machinery:22,Energy:18,Aerospace:14,Chemicals:12,Other:34} },
+  { country:"Germany",      region:"Europe",       value:1850, category:"Automobiles",  partner:"France",     growth:3.1,  risk:"Low",    gdpShare:40,
+    exports:[1600,1660,1720,1790,1850], imports:[1300,1350,1400,1450,1490],
+    partners:{France:9,USA:9,China:8,Netherlands:7,Other:67}, catBreak:{Automobiles:18,Machinery:17,Chemicals:13,Electronics:11,Other:41} },
+  { country:"Netherlands",  region:"Europe",       value:960,  category:"Chemicals",    partner:"Germany",    growth:2.8,  risk:"Low",    gdpShare:70,
+    exports:[860,880,900,930,960],     imports:[780,800,820,850,870],
+    partners:{Germany:24,Belgium:11,UK:9,France:8,Other:48}, catBreak:{Chemicals:20,Machinery:16,Electronics:14,Agriculture:12,Other:38} },
+  { country:"Japan",        region:"Asia",         value:910,  category:"Machinery",    partner:"China",      growth:2.2,  risk:"Low",    gdpShare:18,
+    exports:[820,840,860,890,910],     imports:[750,770,790,820,840],
+    partners:{China:22,USA:19,"S.Korea":7,Australia:6,Other:46}, catBreak:{Machinery:25,Electronics:21,Automobiles:18,Chemicals:9,Other:27} },
+  { country:"S. Korea",     region:"Asia",         value:680,  category:"Electronics",  partner:"China",      growth:4.1,  risk:"Low",    gdpShare:40,
+    exports:[580,600,620,650,680],     imports:[510,530,550,580,600],
+    partners:{China:25,USA:15,Vietnam:9,Japan:5,Other:46}, catBreak:{Electronics:35,Machinery:14,Chemicals:11,Steel:9,Other:31} },
+  { country:"France",       region:"Europe",       value:620,  category:"Aerospace",    partner:"Germany",    growth:2.3,  risk:"Low",    gdpShare:22,
+    exports:[560,575,590,605,620],     imports:[590,605,615,628,640],
+    partners:{Germany:16,USA:8,Italy:8,Spain:7,Other:61}, catBreak:{Aerospace:15,Machinery:14,Chemicals:13,Automobiles:11,Other:47} },
+  { country:"Canada",       region:"N. America",   value:590,  category:"Energy",       partner:"USA",        growth:1.9,  risk:"Low",    gdpShare:32,
+    exports:[530,545,558,572,590],     imports:[470,480,495,510,525],
+    partners:{USA:76,China:4,UK:3,Japan:2,Other:15}, catBreak:{Energy:22,Automobiles:14,Machinery:12,Agriculture:10,Other:42} },
+  { country:"Italy",        region:"Europe",       value:580,  category:"Machinery",    partner:"Germany",    growth:2.6,  risk:"Low",    gdpShare:30,
+    exports:[515,530,548,562,580],     imports:[480,495,508,522,535],
+    partners:{Germany:13,France:11,USA:10,Spain:5,Other:61}, catBreak:{Machinery:22,Textiles:11,Chemicals:10,Automobiles:9,Other:48} },
+  { country:"Belgium",      region:"Europe",       value:540,  category:"Chemicals",    partner:"Germany",    growth:2.0,  risk:"Low",    gdpShare:87,
+    exports:[490,500,515,527,540],     imports:[470,480,495,510,520],
+    partners:{Germany:19,France:16,Netherlands:13,UK:7,Other:45}, catBreak:{Chemicals:26,Machinery:15,Electronics:12,Pharmaceuticals:11,Other:36} },
+  { country:"Switzerland",  region:"Europe",       value:420,  category:"Pharmaceuticals",partner:"Germany",  growth:3.8,  risk:"Low",    gdpShare:56,
+    exports:[370,382,396,408,420],     imports:[310,318,328,336,345],
+    partners:{Germany:15,USA:14,Italy:7,France:6,Other:58}, catBreak:{Pharmaceuticals:34,Chemicals:17,Machinery:12,Watches:8,Other:29} },
+  { country:"Taiwan",       region:"Asia",         value:480,  category:"Electronics",  partner:"China",      growth:5.5,  risk:"Medium", gdpShare:65,
+    exports:[390,410,432,455,480],     imports:[310,325,340,358,375],
+    partners:{China:28,USA:15,Japan:7,HongKong:7,Other:43}, catBreak:{Electronics:55,Machinery:16,Chemicals:8,Plastics:6,Other:15} },
+  { country:"Australia",    region:"Oceania",      value:390,  category:"Metals",       partner:"China",      growth:2.1,  risk:"Low",    gdpShare:27,
+    exports:[340,355,366,378,390],     imports:[270,278,286,296,305],
+    partners:{China:38,Japan:14,"S.Korea":7,India:5,Other:36}, catBreak:{Metals:27,Energy:26,Agriculture:18,Mining:14,Other:15} },
+  { country:"Spain",        region:"Europe",       value:410,  category:"Automobiles",  partner:"France",     growth:3.3,  risk:"Low",    gdpShare:30,
+    exports:[360,372,384,396,410],     imports:[340,352,362,374,385],
+    partners:{France:16,Germany:11,Italy:9,UK:7,Other:57}, catBreak:{Automobiles:17,Machinery:12,Agriculture:10,Chemicals:9,Other:52} },
+  { country:"UAE",          region:"Middle East",  value:370,  category:"Energy",       partner:"India",      growth:4.8,  risk:"Medium", gdpShare:80,
+    exports:[300,318,336,352,370],     imports:[240,252,264,276,290],
+    partners:{India:11,China:10,Japan:7,Switzerland:4,Other:68}, catBreak:{Energy:38,Gold:15,Machinery:10,Chemicals:7,Other:30} },
+  { country:"Mexico",       region:"N. America",   value:500,  category:"Automobiles",  partner:"USA",        growth:3.7,  risk:"Medium", gdpShare:41,
+    exports:[420,440,460,480,500],     imports:[440,460,475,490,510],
+    partners:{USA:82,Canada:3,Germany:2,China:2,Other:11}, catBreak:{Automobiles:25,Electronics:18,Machinery:13,Agriculture:8,Other:36} },
+  { country:"Vietnam",      region:"Asia",         value:370,  category:"Electronics",  partner:"USA",        growth:7.2,  risk:"Medium", gdpShare:89,
+    exports:[280,307,330,350,370],     imports:[265,288,308,328,348],
+    partners:{USA:29,China:16,Japan:7,"S.Korea":6,Other:42}, catBreak:{Electronics:38,Textiles:16,Machinery:12,Footwear:9,Other:25} },
+  { country:"Poland",       region:"Europe",       value:310,  category:"Machinery",    partner:"Germany",    growth:4.2,  risk:"Low",    gdpShare:52,
+    exports:[250,264,278,294,310],     imports:[240,252,265,280,294],
+    partners:{Germany:28,Czech:7,France:6,UK:6,Other:53}, catBreak:{Machinery:22,Electronics:15,Automobiles:12,Chemicals:9,Other:42} },
+  { country:"India",        region:"Asia",         value:450,  category:"Textiles",     partner:"USA",        growth:5.2,  risk:"Medium", gdpShare:13,
+    exports:[340,370,395,420,450],     imports:[510,530,550,580,610],
+    partners:{USA:18,UAE:7,China:5,Netherlands:4,Other:66}, catBreak:{Textiles:14,Petroleum:13,Engineering:12,Chemicals:9,Other:52} },
+  { country:"Turkey",       region:"Europe",       value:255,  category:"Automobiles",  partner:"Germany",    growth:3.6,  risk:"Medium", gdpShare:28,
+    exports:[215,227,237,246,255],     imports:[250,260,268,276,286],
+    partners:{Germany:9,UK:7,Italy:6,USA:6,Other:72}, catBreak:{Automobiles:15,Textiles:15,Machinery:13,Chemicals:8,Other:49} },
+  { country:"Brazil",       region:"S. America",   value:320,  category:"Agriculture",  partner:"China",      growth:2.5,  risk:"Medium", gdpShare:15,
+    exports:[260,275,288,305,320],     imports:[220,230,240,255,265],
+    partners:{China:32,USA:11,Argentina:6,Netherlands:5,Other:46}, catBreak:{Agriculture:37,Metals:13,Energy:10,Chemicals:7,Other:33} },
+  { country:"Argentina",    region:"S. America",   value:95,   category:"Agriculture",  partner:"Brazil",     growth:-2.1, risk:"High",   gdpShare:16,
+    exports:[105,102,99,97,95],        imports:[68,65,62,60,58],
+    partners:{Brazil:18,China:10,USA:7,EU:6,Other:59}, catBreak:{Agriculture:52,Energy:14,Chemicals:7,Metals:5,Other:22} },
+  { country:"Russia",       region:"Europe",       value:410,  category:"Energy",       partner:"China",      growth:-1.2, risk:"High",   gdpShare:24,
+    exports:[490,470,450,430,410],     imports:[290,275,260,250,235],
+    partners:{China:38,India:12,Turkey:7,EU:6,Other:37}, catBreak:{Energy:55,Metals:12,Chemicals:8,Agriculture:6,Other:19} },
+  { country:"Saudi Arabia", region:"Middle East",  value:360,  category:"Energy",       partner:"China",      growth:1.1,  risk:"Medium", gdpShare:45,
+    exports:[320,330,340,350,360],     imports:[155,165,175,185,195],
+    partners:{China:22,Japan:14,India:12,"S.Korea":10,Other:42}, catBreak:{Energy:78,Chemicals:9,Plastics:5,Metals:4,Other:4} },
+  { country:"South Africa", region:"Africa",       value:120,  category:"Metals",       partner:"India",      growth:1.8,  risk:"High",   gdpShare:23,
+    exports:[98,103,108,113,120],      imports:[92,96,100,105,110],
+    partners:{China:18,USA:8,Germany:7,India:6,Other:61}, catBreak:{Metals:33,Mining:22,Agriculture:13,Chemicals:8,Other:24} },
+];
+
+const YEARS = ['2020','2021','2022','2023','2024'];
+const CAT_COLORS = {
+  Electronics:'#378add',Machinery:'#7f77dd',Automobiles:'#1a9e75',
+  Chemicals:'#ef9f27',Textiles:'#d85a30',Agriculture:'#5dcaa5',
+  Energy:'#fa8c3a',Aerospace:'#a78bfa',Metals:'#f472b6',
+  Pharmaceuticals:'#34d399',Mining:'#fb923c',Gold:'#fbbf24',
+  Steel:'#94a3b8',Footwear:'#c084fc',Watches:'#67e8f9',
+  Plastics:'#86efac',Other:'#6a7d97'
+};
+const REGION_COLORS = {
+  'Asia':'#378add','Europe':'#7f77dd','N. America':'#1a9e75',
+  'Middle East':'#ef9f27','S. America':'#d85a30','Africa':'#f472b6','Oceania':'#5dcaa5'
+};
+const SORTED = [...EXPORT_DATA].sort((a,b)=>b.value-a.value);
+const MAX_VAL = SORTED[0].value;
+let searchCharts=[];
+
+const MF="'DM Mono',monospace";
+const GC='rgba(255,255,255,0.05)';
+const TC='#6a7d97';
+const TT={backgroundColor:'#0d1520',borderColor:'rgba(255,255,255,0.12)',borderWidth:0.5,titleColor:'#e8edf5',bodyColor:'#6a7d97',titleFont:{family:MF,size:12},bodyFont:{family:MF,size:11}};
+
+function rc(r){return r==='Low'?'#1a9e75':r==='Medium'?'#ef9f27':'#d85a30'}
+function gClass(g){return g>=4?'growth-pos':g<0?'growth-neg':''}
+function gs(g){return (g>=0?'+':'')+g+'%'}
+
+function showSection(id){
+  document.querySelectorAll('section').forEach(s=>s.classList.remove('visible'));
+  document.getElementById('section-'+id).classList.add('visible');
+  document.querySelectorAll('.nav-pill').forEach((p,i)=>{
+    p.classList.toggle('active',['overview','leaderboard','search','about'][i]===id);
+  });
+  document.getElementById('hero-block').style.display=id==='overview'?'':'none';
+}
+
+function buildOverviewStats(){
+  const totalVol=EXPORT_DATA.reduce((s,d)=>s+d.value,0);
+  const avgGrowth=(EXPORT_DATA.reduce((s,d)=>s+d.growth,0)/EXPORT_DATA.length).toFixed(1);
+  const highRisk=EXPORT_DATA.filter(d=>d.risk==='High');
+  const top=SORTED[0];
+  const fastGrow=[...EXPORT_DATA].sort((a,b)=>b.growth-a.growth)[0];
+  const surplusCount=EXPORT_DATA.filter(d=>d.exports[4]>d.imports[4]).length;
+  document.getElementById('overview-stats').innerHTML=`
+    <div class="stat-card"><div class="stat-label">Total tracked volume</div><div class="stat-value">$${(totalVol/1000).toFixed(1)}T</div><div class="stat-sub">25 economies</div></div>
+    <div class="stat-card"><div class="stat-label">Top exporter</div><div class="stat-value" style="font-size:1.3rem">${top.country}</div><div class="stat-sub"><span class="stat-badge badge-green">$${top.value}B</span></div></div>
+    <div class="stat-card"><div class="stat-label">Fastest growth</div><div class="stat-value" style="font-size:1.3rem">${fastGrow.country}</div><div class="stat-sub"><span class="stat-badge badge-green">+${fastGrow.growth}%</span></div></div>
+    <div class="stat-card"><div class="stat-label">Avg growth rate</div><div class="stat-value">${avgGrowth}%</div><div class="stat-sub"><span class="stat-badge badge-amber">Weighted mean</span></div></div>
+    <div class="stat-card"><div class="stat-label">Trade surplus nations</div><div class="stat-value">${surplusCount}</div><div class="stat-sub">of 25 tracked</div></div>
+    <div class="stat-card"><div class="stat-label">High-risk markets</div><div class="stat-value">${highRisk.length}</div><div class="stat-sub"><span class="stat-badge badge-red">${highRisk.map(d=>d.country).join(' · ')}</span></div></div>
+  `;
+}
+
+function buildLeaderboard(){
+  document.getElementById('leaderboard-body').innerHTML=SORTED.map((d,i)=>{
+    const rc2=i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'';
+    const bal=d.exports[4]-d.imports[4];
+    const balStr=(bal>=0?'+':'')+bal+'B';
+    return `<tr onclick="selectCountry('${d.country}');showSection('search')">
+      <td><span class="rank-num ${rc2}">${i+1}</span></td>
+      <td>
+        <div class="country-name">${d.country}</div>
+        <div class="bar-bg" style="max-width:120px"><div class="bar-fill" style="width:${((d.value/MAX_VAL)*100).toFixed(0)}%"></div></div>
+      </td>
+      <td><span style="font-size:11px;color:${REGION_COLORS[d.region]||'var(--muted)'}">${d.region}</span></td>
+      <td><span style="font-size:11px;color:var(--muted)">${d.category}</span></td>
+      <td><span style="font-size:11px;color:var(--muted)">${d.partner}</span></td>
+      <td><span class="${gClass(d.growth)}" style="font-weight:500">${gs(d.growth)}</span></td>
+      <td><span class="risk-dot risk-${d.risk.toLowerCase()}"></span><span style="font-size:11px">${d.risk}</span></td>
+      <td><span style="font-size:11px;color:${bal>=0?'var(--accent)':'var(--coral)'}">$${balStr}</span></td>
+      <td><span style="font-family:var(--font-head);font-weight:700">$${d.value}B</span></td>
+    </tr>`;
+  }).join('');
+}
+
+function buildSuggestions(){
+  document.getElementById('suggestions').innerHTML=
+    EXPORT_DATA.map(d=>`<button class="sug-btn" onclick="selectCountry('${d.country}')">${d.country}</button>`).join('');
+}
+function selectCountry(name){
+  document.getElementById('search-input').value=name;
+  handleSearch(name);
+}
+
+function destroySearchCharts(){searchCharts.forEach(c=>c.destroy());searchCharts=[];}
+
+function handleSearch(q){
+  const container=document.getElementById('search-result');
+  const match=EXPORT_DATA.find(d=>d.country.toLowerCase().includes(q.toLowerCase().trim()));
+  if(!q.trim()){destroySearchCharts();container.innerHTML='';return;}
+  if(!match){
+    destroySearchCharts();
+    container.innerHTML=`<div class="no-result">No country found matching "<strong>${q}</strong>".<br><span style="font-size:12px">Click a country chip above.</span></div>`;
+    return;
+  }
+  destroySearchCharts();
+
+  const rank=SORTED.findIndex(d=>d.country===match.country)+1;
+  const rColor=rc(match.risk);
+  const totalVol=EXPORT_DATA.reduce((s,d)=>s+d.value,0);
+  const shareOfWorld=((match.value/totalVol)*100).toFixed(1);
+  const avgGlobal=EXPORT_DATA.reduce((s,d)=>s+d.growth,0)/EXPORT_DATA.length;
+  const tradeBalance=match.exports[4]-match.imports[4];
+  const balStr=(tradeBalance>=0?'+$':'−$')+Math.abs(tradeBalance)+'B';
+  const sameRegion=EXPORT_DATA.filter(d=>d.region===match.region&&d.country!==match.country);
+  const regionAvgGrowth=(sameRegion.reduce((s,d)=>s+d.growth,0)/sameRegion.length).toFixed(1);
+  const exportIntensity=match.gdpShare;
+
+  container.innerHTML=`
+    <div class="country-header">
+      <div>
+        <div class="country-hero-name">${match.country}</div>
+        <div class="country-rank-sub">Rank #${rank} globally · ${shareOfWorld}% of tracked world exports · ${match.region}</div>
+      </div>
+      <span style="font-size:11px;padding:4px 12px;border-radius:3px;border:0.5px solid ${rColor}55;background:${rColor}18;color:${rColor}">${match.risk} Risk</span>
+    </div>
+
+    <div class="kpi-row">
+      <div class="kpi"><div class="kpi-label">Export volume</div><div class="kpi-value" style="color:var(--accent)">$${match.value}B</div></div>
+      <div class="kpi"><div class="kpi-label">YoY growth</div><div class="kpi-value" style="color:${match.growth>=4?'var(--accent)':match.growth<0?'var(--coral)':'var(--amber)'}">${gs(match.growth)}</div></div>
+      <div class="kpi"><div class="kpi-label">Trade balance</div><div class="kpi-value" style="color:${tradeBalance>=0?'var(--accent)':'var(--coral)'}">${balStr}</div></div>
+      <div class="kpi"><div class="kpi-label">GDP export share</div><div class="kpi-value">${exportIntensity}%</div></div>
+      <div class="kpi"><div class="kpi-label">vs global avg</div><div class="kpi-value" style="font-size:1rem;padding-top:4px;color:${match.growth>=avgGlobal?'var(--accent)':'var(--coral)'}">${match.growth>=avgGlobal?'Above avg':'Below avg'}</div></div>
+      <div class="kpi"><div class="kpi-label">vs region avg</div><div class="kpi-value" style="font-size:1rem;padding-top:4px;color:${match.growth>=parseFloat(regionAvgGrowth)?'var(--accent)':'var(--coral)'}">${match.growth>=parseFloat(regionAvgGrowth)?'Above':'Below'} (${gs(parseFloat(regionAvgGrowth))})</div></div>
+      <div class="kpi"><div class="kpi-label">Top category</div><div class="kpi-value" style="font-size:.9rem;padding-top:6px">${match.category}</div></div>
+      <div class="kpi"><div class="kpi-label">Top partner</div><div class="kpi-value" style="font-size:.9rem;padding-top:6px">${match.partner}</div></div>
+    </div>
+
+    <div class="search-chart-grid">
+      <div class="search-chart-card">
+        <div class="chart-header"><div class="chart-title">Export trend (2020–2024)</div><div class="chart-meta">USD billions</div></div>
+        <div class="chart-wrap" style="height:200px"><canvas id="sc-trend" role="img" aria-label="Export trend for ${match.country}">Trend</canvas></div>
+      </div>
+      <div class="search-chart-card">
+        <div class="chart-header"><div class="chart-title">Exports vs imports</div><div class="chart-meta">USD billions</div></div>
+        <div style="display:flex;gap:14px;margin-bottom:8px;font-size:11px;color:var(--muted)">
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#1a9e75;display:inline-block"></span>Exports</span>
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#378add;display:inline-block"></span>Imports</span>
+        </div>
+        <div class="chart-wrap" style="height:182px"><canvas id="sc-balance" role="img" aria-label="Trade balance for ${match.country}">Balance</canvas></div>
+      </div>
+    </div>
+
+    <div class="search-chart-grid-3">
+      <div class="search-chart-card">
+        <div class="chart-header"><div class="chart-title">Trade partners</div><div class="chart-meta">Share %</div></div>
+        <div class="chart-wrap" style="height:200px"><canvas id="sc-partners" role="img" aria-label="Trade partners for ${match.country}">Partners</canvas></div>
+      </div>
+      <div class="search-chart-card">
+        <div class="chart-header"><div class="chart-title">Export category mix</div><div class="chart-meta">Share %</div></div>
+        <div class="chart-wrap" style="height:200px"><canvas id="sc-catmix" role="img" aria-label="Category mix for ${match.country}">Category mix</canvas></div>
+      </div>
+      <div class="search-chart-card">
+        <div class="chart-header"><div class="chart-title">Trade balance trend</div><div class="chart-meta">Surplus / deficit $B</div></div>
+        <div class="chart-wrap" style="height:200px"><canvas id="sc-baltrd" role="img" aria-label="Trade balance trend for ${match.country}">Balance trend</canvas></div>
+      </div>
+    </div>
+
+    <div class="search-chart-grid">
+      <div class="search-chart-card">
+        <div class="chart-header"><div class="chart-title">Growth vs all peers</div><div class="chart-meta">YoY % — highlighted</div></div>
+        <div class="chart-wrap" style="height:200px"><canvas id="sc-peers" role="img" aria-label="Peer growth comparison for ${match.country}">Peer growth</canvas></div>
+      </div>
+      <div class="search-chart-card">
+        <div class="chart-header"><div class="chart-title">Regional peers comparison</div><div class="chart-meta">Volume + growth in ${match.region}</div></div>
+        <div class="chart-wrap" style="height:200px"><canvas id="sc-region" role="img" aria-label="Regional comparison for ${match.country}">Region</canvas></div>
+      </div>
+    </div>
+
+    <div class="search-chart-card" style="margin-bottom:1.5rem">
+      <div class="chart-header"><div class="chart-title">Volume rank across all 25 economies</div><div class="chart-meta">${match.country} highlighted</div></div>
+      <div class="chart-wrap" style="height:340px"><canvas id="sc-rank" role="img" aria-label="Volume rank for ${match.country}">Volume rank</canvas></div>
+    </div>
+  `;
+
+  // 1. Export trend line + import line
+  const c1=new Chart(document.getElementById('sc-trend'),{
+    type:'line',
+    data:{labels:YEARS,datasets:[
+      {label:'Exports',data:match.exports,borderColor:'#1a9e75',backgroundColor:'rgba(26,158,117,0.08)',borderWidth:2,pointBackgroundColor:'#1a9e75',pointRadius:4,tension:0.35,fill:true},
+      {label:'Imports',data:match.imports,borderColor:'#378add',backgroundColor:'transparent',borderWidth:1.5,pointBackgroundColor:'#378add',pointRadius:3,tension:0.35,borderDash:[4,3]},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{...TT,callbacks:{label:ctx=>` ${ctx.dataset.label}: $${ctx.parsed.y}B`}}},
+      scales:{x:{grid:{color:GC},ticks:{color:TC,font:{family:MF,size:10}}},y:{grid:{color:GC},ticks:{color:TC,font:{family:MF,size:10},callback:v=>'$'+v+'B'}}}}
+  });
+  searchCharts.push(c1);
+
+  // 2. Exports vs imports grouped bar
+  const c2=new Chart(document.getElementById('sc-balance'),{
+    type:'bar',
+    data:{labels:YEARS,datasets:[
+      {label:'Exports',data:match.exports,backgroundColor:'rgba(26,158,117,0.75)',borderColor:'#1a9e75',borderWidth:1,borderRadius:3},
+      {label:'Imports',data:match.imports,backgroundColor:'rgba(55,138,221,0.55)',borderColor:'#378add',borderWidth:1,borderRadius:3},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{...TT,callbacks:{label:ctx=>` ${ctx.dataset.label}: $${ctx.parsed.y}B`}}},
+      scales:{x:{grid:{display:false},ticks:{color:TC,font:{family:MF,size:10}}},y:{grid:{color:GC},ticks:{color:TC,font:{family:MF,size:10},callback:v=>'$'+v+'B'}}}}
+  });
+  searchCharts.push(c2);
+
+  // 3. Partner donut
+  const pKeys=Object.keys(match.partners),pVals=Object.values(match.partners);
+  const pColors=['#378add','#7f77dd','#1a9e75','#ef9f27','#d85a30'];
+  const c3=new Chart(document.getElementById('sc-partners'),{
+    type:'doughnut',
+    data:{labels:pKeys,datasets:[{data:pVals,backgroundColor:pColors.map(c=>c+'bb'),borderColor:pColors,borderWidth:1,hoverOffset:5}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'55%',
+      plugins:{legend:{display:true,position:'right',labels:{color:'#6a7d97',font:{family:MF,size:10},boxWidth:9,padding:7}},
+        tooltip:{...TT,callbacks:{label:ctx=>` ${ctx.label}: ${ctx.parsed}%`}}}}
+  });
+  searchCharts.push(c3);
+
+  // 4. Category mix donut
+  const ck=Object.keys(match.catBreak),cv=Object.values(match.catBreak);
+  const ccArr=ck.map(k=>CAT_COLORS[k]||'#888');
+  const c4=new Chart(document.getElementById('sc-catmix'),{
+    type:'doughnut',
+    data:{labels:ck,datasets:[{data:cv,backgroundColor:ccArr.map(c=>c+'bb'),borderColor:ccArr,borderWidth:1,hoverOffset:5}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'55%',
+      plugins:{legend:{display:true,position:'right',labels:{color:'#6a7d97',font:{family:MF,size:10},boxWidth:9,padding:7}},
+        tooltip:{...TT,callbacks:{label:ctx=>` ${ctx.label}: ${ctx.parsed}%`}}}}
+  });
+  searchCharts.push(c4);
+
+  // 5. Trade balance trend (area)
+  const balData=YEARS.map((_,i)=>match.exports[i]-match.imports[i]);
+  const c5=new Chart(document.getElementById('sc-baltrd'),{
+    type:'bar',
+    data:{labels:YEARS,datasets:[{
+      label:'Balance',data:balData,
+      backgroundColor:balData.map(v=>v>=0?'rgba(26,158,117,0.7)':'rgba(216,90,48,0.7)'),
+      borderColor:balData.map(v=>v>=0?'#1a9e75':'#d85a30'),borderWidth:1,borderRadius:3
+    }]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{...TT,callbacks:{label:ctx=>` ${ctx.parsed.y>=0?'Surplus':'Deficit'}: $${Math.abs(ctx.parsed.y)}B`}}},
+      scales:{x:{grid:{display:false},ticks:{color:TC,font:{family:MF,size:10}}},y:{grid:{color:GC},ticks:{color:TC,font:{family:MF,size:10},callback:v=>(v>=0?'+':'')+v+'B'}}}}
+  });
+  searchCharts.push(c5);
+
+  // 6. Peers growth bar (highlighted)
+  const peersSorted=[...EXPORT_DATA].sort((a,b)=>b.growth-a.growth);
+  const c6=new Chart(document.getElementById('sc-peers'),{
+    type:'bar',
+    data:{labels:peersSorted.map(d=>d.country),datasets:[{
+      data:peersSorted.map(d=>d.growth),
+      backgroundColor:peersSorted.map(d=>d.country===match.country?rc(d.risk)+'ee':rc(d.risk)+'2e'),
+      borderColor:peersSorted.map(d=>d.country===match.country?rc(d.risk):'transparent'),
+      borderWidth:peersSorted.map(d=>d.country===match.country?2:0),borderRadius:3
+    }]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{...TT,callbacks:{label:ctx=>` ${gs(ctx.parsed.y)}`}}},
+      scales:{x:{grid:{display:false},ticks:{color:peersSorted.map(d=>d.country===match.country?'#e8edf5':'#4a5568'),font:{family:MF,size:8},maxRotation:55,autoSkip:false}},
+        y:{grid:{color:GC},ticks:{color:TC,font:{family:MF,size:10},callback:v=>v+'%'}}}}
+  });
+  searchCharts.push(c6);
+
+  // 7. Regional peers — grouped bar (volume + growth)
+  const regPeers=[match,...sameRegion].sort((a,b)=>b.value-a.value).slice(0,8);
+  const c7=new Chart(document.getElementById('sc-region'),{
+    type:'bar',
+    data:{labels:regPeers.map(d=>d.country),datasets:[
+      {label:'Volume ($B)',data:regPeers.map(d=>d.value),backgroundColor:regPeers.map(d=>d.country===match.country?'#1a9e75cc':'#1a9e7533'),borderColor:regPeers.map(d=>d.country===match.country?'#1a9e75':'transparent'),borderWidth:1,borderRadius:3,yAxisID:'y'},
+      {label:'Growth (%)',data:regPeers.map(d=>d.growth),backgroundColor:regPeers.map(d=>d.country===match.country?'#ef9f27cc':'#ef9f2733'),borderColor:regPeers.map(d=>d.country===match.country?'#ef9f27':'transparent'),borderWidth:1,borderRadius:3,yAxisID:'y1'},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{...TT,callbacks:{label:ctx=>` ${ctx.dataset.label==='Volume ($B)'?'$'+ctx.parsed.y+'B':gs(ctx.parsed.y)}`}}},
+      scales:{
+        x:{grid:{display:false},ticks:{color:'#e8edf5',font:{family:MF,size:10}}},
+        y:{grid:{color:GC},ticks:{color:TC,font:{family:MF,size:10},callback:v=>'$'+v+'B'},position:'left'},
+        y1:{grid:{display:false},ticks:{color:TC,font:{family:MF,size:10},callback:v=>v+'%'},position:'right'}
+      }}
+  });
+  searchCharts.push(c7);
+
+  // 8. Volume rank horizontal bar
+  const c8=new Chart(document.getElementById('sc-rank'),{
+    type:'bar',
+    data:{labels:SORTED.map(d=>d.country),datasets:[{
+      data:SORTED.map(d=>d.value),
+      backgroundColor:SORTED.map(d=>d.country===match.country?rc(d.risk)+'ee':rc(d.risk)+'25'),
+      borderColor:SORTED.map(d=>d.country===match.country?rc(d.risk):'transparent'),
+      borderWidth:SORTED.map(d=>d.country===match.country?2:0),borderRadius:3
+    }]},
+    options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',
+      plugins:{legend:{display:false},tooltip:{...TT,callbacks:{label:ctx=>` $${ctx.parsed.x}B`}}},
+      scales:{
+        x:{grid:{color:GC},ticks:{color:TC,font:{family:MF,size:10},callback:v=>'$'+v+'B'}},
+        y:{grid:{display:false},ticks:{color:SORTED.map(d=>d.country===match.country?'#e8edf5':'#6a7d97'),font:{family:MF,size:10}}}
+      }}
+  });
+  searchCharts.push(c8);
+}
+
+function buildOverviewCharts(){
+  // Volume horizontal bar (all 25)
+  new Chart(document.getElementById('chart-volume'),{
+    type:'bar',
+    data:{labels:SORTED.map(d=>d.country),datasets:[{
+      data:SORTED.map(d=>d.value),
+      backgroundColor:SORTED.map(d=>rc(d.risk)+'cc'),
+      borderColor:SORTED.map(d=>rc(d.risk)),borderWidth:1,borderRadius:3
+    }]},
+    options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',
+      plugins:{legend:{display:false},tooltip:{...TT,callbacks:{label:ctx=>` $${ctx.parsed.x}B`}}},
+      scales:{x:{grid:{color:GC},ticks:{color:TC,font:{family:MF,size:10},callback:v=>'$'+v+'B'}},
+        y:{grid:{display:false},ticks:{color:'#e8edf5',font:{family:MF,size:10}}}}}
+  });
+
+  // Growth bar
+  const sg=[...EXPORT_DATA].sort((a,b)=>b.growth-a.growth);
+  new Chart(document.getElementById('chart-growth'),{
+    type:'bar',
+    data:{labels:sg.map(d=>d.country),datasets:[{
+      data:sg.map(d=>d.growth),
+      backgroundColor:sg.map(d=>rc(d.risk)+'bb'),
+      borderColor:sg.map(d=>rc(d.risk)),borderWidth:1,borderRadius:3
+    }]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{...TT,callbacks:{label:ctx=>` ${gs(ctx.parsed.y)}`}}},
+      scales:{x:{grid:{display:false},ticks:{color:'#e8edf5',font:{family:MF,size:9},maxRotation:50,autoSkip:false}},
+        y:{grid:{color:GC},ticks:{color:TC,font:{family:MF,size:10},callback:v=>v+'%'}}}}
+  });
+
+  // Bubble scatter
+  const rMap={Low:1,Medium:2,High:3};
+  new Chart(document.getElementById('chart-scatter'),{
+    type:'bubble',
+    data:{datasets:EXPORT_DATA.map(d=>({
+      label:d.country,
+      data:[{x:rMap[d.risk],y:d.growth,r:Math.max(5,Math.sqrt(d.value/25))}],
+      backgroundColor:rc(d.risk)+'66',borderColor:rc(d.risk),borderWidth:1
+    }))},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{...TT,callbacks:{title:ctx=>ctx[0].dataset.label,label:ctx=>` Growth: ${gs(ctx.parsed.y)} · $${EXPORT_DATA.find(d=>d.country===ctx.dataset.label).value}B`}}},
+      scales:{
+        x:{min:0,max:4,grid:{color:GC},ticks:{color:TC,font:{family:MF,size:10},callback:v=>['','Low','Medium','High',''][v]||''}},
+        y:{min:-4,max:10,grid:{color:GC},ticks:{color:TC,font:{family:MF,size:10},callback:v=>v+'%'}}
+      }}
+  });
+
+  // Category donut
+  const catTotals={};
+  EXPORT_DATA.forEach(d=>{catTotals[d.category]=(catTotals[d.category]||0)+d.value;});
+  const catKeys=Object.keys(catTotals),catVals=catKeys.map(k=>catTotals[k]);
+  const catColArr=catKeys.map(k=>CAT_COLORS[k]||'#888');
+  document.getElementById('cat-legend').innerHTML=catKeys.map((k,i)=>
+    `<span class="legend-item"><span class="legend-swatch" style="background:${catColArr[i]}"></span>${k}</span>`).join('');
+  new Chart(document.getElementById('chart-category'),{
+    type:'doughnut',
+    data:{labels:catKeys,datasets:[{data:catVals,backgroundColor:catColArr.map(c=>c+'cc'),borderColor:catColArr,borderWidth:1,hoverOffset:6}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'58%',
+      plugins:{legend:{display:false},tooltip:{...TT,callbacks:{label:ctx=>{const t=ctx.dataset.data.reduce((a,b)=>a+b,0);return ` ${ctx.label}: $${ctx.parsed}B (${((ctx.parsed/t)*100).toFixed(1)}%)`;}}}}}
+  });
+
+  // Risk tier pie
+  const riskCounts={Low:0,Medium:0,High:0};
+  EXPORT_DATA.forEach(d=>riskCounts[d.risk]++);
+  new Chart(document.getElementById('chart-risk-pie'),{
+    type:'doughnut',
+    data:{labels:['Low','Medium','High'],datasets:[{
+      data:[riskCounts.Low,riskCounts.Medium,riskCounts.High],
+      backgroundColor:['#1a9e7588','#ef9f2788','#d85a3088'],
+      borderColor:['#1a9e75','#ef9f27','#d85a30'],borderWidth:1,hoverOffset:5
+    }]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'55%',
+      plugins:{legend:{display:true,position:'right',labels:{color:'#6a7d97',font:{family:MF,size:11},boxWidth:10,padding:10}},
+        tooltip:{...TT,callbacks:{label:ctx=>` ${ctx.label}: ${ctx.parsed} countries`}}}}
+  });
+
+  // Trade balance overview bar
+  const balSorted=[...EXPORT_DATA].sort((a,b)=>(b.exports[4]-b.imports[4])-(a.exports[4]-a.imports[4]));
+  const balVals=balSorted.map(d=>d.exports[4]-d.imports[4]);
+  new Chart(document.getElementById('chart-balance-overview'),{
+    type:'bar',
+    data:{labels:balSorted.map(d=>d.country),datasets:[{
+      data:balVals,
+      backgroundColor:balVals.map(v=>v>=0?'rgba(26,158,117,0.7)':'rgba(216,90,48,0.7)'),
+      borderColor:balVals.map(v=>v>=0?'#1a9e75':'#d85a30'),borderWidth:1,borderRadius:3
+    }]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{...TT,callbacks:{label:ctx=>` ${ctx.parsed.y>=0?'Surplus':'Deficit'}: $${Math.abs(ctx.parsed.y)}B`}}},
+      scales:{x:{grid:{display:false},ticks:{color:'#e8edf5',font:{family:MF,size:8},maxRotation:55,autoSkip:false}},
+        y:{grid:{color:GC},ticks:{color:TC,font:{family:MF,size:10},callback:v=>(v>=0?'+':'')+v+'B'}}}}
+  });
+
+  // Top 10 5-year trend lines
+  const top10=SORTED.slice(0,10);
+  const lineColors=['#1a9e75','#378add','#7f77dd','#ef9f27','#d85a30','#5dcaa5','#fa8c3a','#a78bfa','#f472b6','#34d399'];
+  document.getElementById('trend-legend').innerHTML=top10.map((d,i)=>
+    `<span class="legend-item"><span class="legend-swatch" style="background:${lineColors[i]}"></span>${d.country}</span>`).join('');
+  new Chart(document.getElementById('chart-trend-top10'),{
+    type:'line',
+    data:{labels:YEARS,datasets:top10.map((d,i)=>({
+      label:d.country,data:d.exports,
+      borderColor:lineColors[i],backgroundColor:'transparent',
+      borderWidth:2,pointRadius:3,pointBackgroundColor:lineColors[i],tension:0.3
+    }))},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{...TT,callbacks:{label:ctx=>` ${ctx.dataset.label}: $${ctx.parsed.y}B`}}},
+      scales:{x:{grid:{color:GC},ticks:{color:TC,font:{family:MF,size:10}}},
+        y:{grid:{color:GC},ticks:{color:TC,font:{family:MF,size:10},callback:v=>'$'+v+'B'}}}}
+  });
+
+  // Quadrant scatter: volume vs growth
+  new Chart(document.getElementById('chart-quadrant'),{
+    type:'scatter',
+    data:{datasets:EXPORT_DATA.map(d=>({
+      label:d.country,
+      data:[{x:d.value,y:d.growth}],
+      backgroundColor:rc(d.risk)+'88',borderColor:rc(d.risk),borderWidth:1,
+      pointRadius:6,pointHoverRadius:8
+    }))},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{...TT,callbacks:{title:ctx=>ctx[0].dataset.label,label:ctx=>` Volume: $${ctx.parsed.x}B · Growth: ${gs(ctx.parsed.y)}`}}},
+      scales:{
+        x:{grid:{color:GC},ticks:{color:TC,font:{family:MF,size:10},callback:v=>'$'+v+'B'},title:{display:true,text:'Export Volume (USD B)',color:TC,font:{family:MF,size:10}}},
+        y:{grid:{color:GC},ticks:{color:TC,font:{family:MF,size:10},callback:v=>v+'%'},title:{display:true,text:'Growth Rate (%)',color:TC,font:{family:MF,size:10}}}
+      }}
+  });
+}
+
+buildOverviewStats();
+buildLeaderboard();
+buildSuggestions();
+buildOverviewCharts();
+</script>
+</body>
+</html>
